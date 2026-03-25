@@ -37,5 +37,5 @@ python weather_pipeline.py
 
 ## Cities Covered
 
-100+ cities across 7 regions:
+100 cities across 7 regions:
 - North America, South America, Europe, Africa, Middle East, Asia, Oceania
