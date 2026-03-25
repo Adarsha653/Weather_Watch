@@ -2,6 +2,25 @@
 
 A global weather data pipeline built with PySpark that fetches hourly weather data for 100+ cities worldwide using the Open-Meteo API, designed to run as a scheduled job on Databricks.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    A[🌐 Open-Meteo API] -->|Hourly fetch\n100+ cities| B[PySpark Ingestion]
+
+    subgraph Databricks Medallion Pipeline
+        B --> C[🥉 Bronze Layer\nweather_bronze\nRaw append-only records]
+        C --> D[🥈 Silver Layer\nweather_silver\nCleaned · Deduplicated\nFeels-like temp · Weather labels]
+        D --> E1[🥇 Gold — Daily Stats\nweather_gold_daily\nAvg · Min · Max per city/day]
+        D --> E2[🥇 Gold — City Ranking\nweather_gold_city_ranking\nLatest snapshot · Global rankings]
+    end
+
+    E1 --> F[📊 Databricks Dashboard\nKPI tiles · World map]
+    E2 --> F
+
+    G[⏰ Databricks Job\n1-hour schedule] -.->|triggers| B
+```
+
 ## Overview
 
 This pipeline collects real-time weather data every hour across major cities in North America, South America, Europe, Africa, the Middle East, Asia, and Oceania.
