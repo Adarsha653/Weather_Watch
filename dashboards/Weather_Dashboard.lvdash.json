@@ -1,0 +1,769 @@
+{
+  "datasets": [
+    {
+      "name": "ae550655",
+      "displayName": "Chloropeth map",
+      "queryLines": [
+        "SELECT \n",
+        "  country,\n",
+        "  ROUND(AVG(temperature_c), 1) AS avg_temp_c,\n",
+        "  COUNT(DISTINCT city) AS num_cities,\n",
+        "  ROUND(AVG(humidity_pct), 1) AS avg_humidity_pct\n",
+        "FROM weather_gold_city_ranking\n",
+        "GROUP BY country\n"
+      ]
+    },
+    {
+      "name": "bef8d385",
+      "displayName": "Hottest city",
+      "queryLines": [
+        "SELECT city, temperature_c FROM weather_gold_city_ranking WHERE temp_rank = 1"
+      ]
+    },
+    {
+      "name": "92a32ef7",
+      "displayName": "Coldest City",
+      "queryLines": [
+        "SELECT city, temperature_c FROM weather_gold_city_ranking ORDER BY temp_rank DESC LIMIT 1"
+      ]
+    },
+    {
+      "name": "a74639a1",
+      "displayName": "Rainiest City",
+      "queryLines": [
+        "SELECT city, total_precipitation_mm FROM weather_gold_daily ORDER BY total_precipitation_mm DESC LIMIT 1"
+      ]
+    },
+    {
+      "name": "3029e88a",
+      "displayName": "Windiest City",
+      "queryLines": [
+        "SELECT city, wind_speed_kmh FROM weather_gold_city_ranking ORDER BY wind_speed_kmh DESC LIMIT 1\n"
+      ]
+    },
+    {
+      "name": "93dde377",
+      "displayName": "Hot vs Cold",
+      "queryLines": [
+        "SELECT city, temperature_c,\n",
+        "  CASE WHEN temperature_c >= 25 THEN 'Hot'\n",
+        "       WHEN temperature_c >= 15 THEN 'Warm'\n",
+        "       WHEN temperature_c >= 5  THEN 'Cool'\n",
+        "       ELSE 'Cold'\n",
+        "  END AS category\n",
+        "FROM weather_gold_city_ranking\n",
+        "ORDER BY temperature_c DESC"
+      ]
+    },
+    {
+      "name": "2817cc2b",
+      "displayName": "Weather Condition Breakdown",
+      "queryLines": [
+        "SELECT weather_description, COUNT(*) as city_count\n",
+        "FROM weather_gold_city_ranking\n",
+        "GROUP BY weather_description\n",
+        "ORDER BY city_count DESC"
+      ]
+    },
+    {
+      "name": "1a186b70",
+      "displayName": "Wind Speed vs Temperature",
+      "queryLines": [
+        "SELECT city, temperature_c, wind_speed_kmh, humidity_pct\n",
+        "FROM weather_gold_city_ranking\n"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "0b8aae79",
+      "displayName": "Dashboard",
+      "layout": [
+        {
+          "widget": {
+            "name": "map-average-temperature-across-countries-last-24-hours",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ae550655",
+                  "fields": [
+                    {
+                      "name": "sum(avg_temp_c)",
+                      "expression": "SUM(`avg_temp_c`)"
+                    },
+                    {
+                      "name": "country",
+                      "expression": "`country`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "frame": {
+                "showTitle": true,
+                "title": "Map showing the average temperature across countries over the past 24 hours"
+              },
+              "widgetType": "choropleth-map",
+              "encodings": {
+                "color": {
+                  "fieldName": "sum(avg_temp_c)",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  },
+                  "displayName": "Average Temperature",
+                  "scale": {
+                    "type": "quantitative",
+                    "colorRamp": {
+                      "mode": "scheme",
+                      "scheme": "blueorange"
+                    }
+                  }
+                },
+                "region": {
+                  "regionType": "mapbox-v4-admin",
+                  "admin0": {
+                    "fieldName": "country",
+                    "type": "field",
+                    "geographicRole": "admin0-unit-code"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 12,
+            "height": 9
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_hottest",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "bef8d385",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "🔥 Hottest City",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "city",
+                  "style": {
+                    "fontSize": 36
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_coldest",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "92a32ef7",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "❄️ Coldest City",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "city"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_rainiest",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "a74639a1",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "🌧️ Rainiest City",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "city",
+                  "displayName": "Precipitation"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_windiest",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "3029e88a",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "💨 Windiest City",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "city",
+                  "displayName": "Wind Speed"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "c82",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "bef8d385",
+                  "fields": [
+                    {
+                      "name": "temperature_c",
+                      "expression": "`temperature_c`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "°C",
+                "showTitle": true,
+                "showDescription": false,
+                "description": "C"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "temperature_c",
+                  "style": {
+                    "fontSize": 36
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 3,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "f265d8da",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "92a32ef7",
+                  "fields": [
+                    {
+                      "name": "temperature_c",
+                      "expression": "`temperature_c`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "°C",
+                "showTitle": true,
+                "showDescription": false,
+                "description": "C"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "temperature_c",
+                  "style": {
+                    "fontSize": 36
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 2,
+            "width": 3,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "56bc81da",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "3029e88a",
+                  "fields": [
+                    {
+                      "name": "wind_speed_kmh",
+                      "expression": "`wind_speed_kmh`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "🔥 Hottest City",
+                "showTitle": false,
+                "showDescription": true,
+                "description": "km/hr"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "wind_speed_kmh",
+                  "style": {
+                    "fontSize": 36
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 2,
+            "width": 3,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "30844485",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "a74639a1",
+                  "fields": [
+                    {
+                      "name": "total_precipitation_mm",
+                      "expression": "`total_precipitation_mm`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "🔥 Hottest City",
+                "showTitle": false,
+                "showDescription": true,
+                "description": "mm"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_precipitation_mm",
+                  "style": {
+                    "fontSize": 36
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 2,
+            "width": 3,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "average-temperature-vs-cities",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "93dde377",
+                  "fields": [
+                    {
+                      "name": "category",
+                      "expression": "`category`"
+                    },
+                    {
+                      "name": "sum(temperature_c)",
+                      "expression": "SUM(`temperature_c`)"
+                    },
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Average Temperature vs Cities",
+                "showDescription": false,
+                "description": ""
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sum(temperature_c)",
+                  "displayName": "Temperature",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "city",
+                  "displayName": "Cities",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  }
+                },
+                "color": {
+                  "fieldName": "category",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    },
+                    "mappings": [
+                      {
+                        "value": "Hot",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 4
+                        }
+                      },
+                      {
+                        "value": "Warm",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 10
+                        }
+                      },
+                      {
+                        "value": "Cool",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 1
+                        }
+                      },
+                      {
+                        "value": "Cold",
+                        "color": {
+                          "themeColorType": "selectionColor"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "proportion-cities-weather-conditions",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "2817cc2b",
+                  "fields": [
+                    {
+                      "name": "sum(city_count)",
+                      "expression": "SUM(`city_count`)"
+                    },
+                    {
+                      "name": "weather_description",
+                      "expression": "`weather_description`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Proportion of cities across different weather conditions"
+              },
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "sum(city_count)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Percentage of cities"
+                },
+                "color": {
+                  "fieldName": "weather_description",
+                  "displayName": "Weather condition",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 12,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "wind-speed-vs-temperature",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "1a186b70",
+                  "fields": [
+                    {
+                      "name": "humidity_pct",
+                      "expression": "`humidity_pct`"
+                    },
+                    {
+                      "name": "temperature_c",
+                      "expression": "`temperature_c`"
+                    },
+                    {
+                      "name": "wind_speed_kmh",
+                      "expression": "`wind_speed_kmh`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Wind Speed vs Temperature"
+              },
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 1
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ],
+                "size": 1
+              },
+              "widgetType": "scatter",
+              "encodings": {
+                "x": {
+                  "fieldName": "temperature_c",
+                  "displayName": "Temperature (°C)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "wind_speed_kmh",
+                  "displayName": "Wind Speed (km/hr)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "humidity_pct",
+                  "displayName": "Humidity (mm)",
+                  "scale": {
+                    "type": "quantitative",
+                    "colorRamp": {
+                      "mode": "scheme",
+                      "scheme": "blues"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 18,
+            "width": 12,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "applyModeEnabled": false
+  }
+}

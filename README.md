@@ -35,6 +35,15 @@ python weather_pipeline.py
 2. Create a new **Job** pointing to `weather_pipeline.py`
 3. Set the schedule to **every 1 hour**
 
+## Dashboard
+
+The pipeline feeds a live Databricks dashboard with global weather KPIs and an interactive world map.
+
+![Weather Dashboard](assets/dashboard_1.png)
+![Weather Dashboard Map](assets/dashboard_2.png)
+
+> Dashboard exported as `dashboards/Weather_Dashboard.lvdash.json` — import it directly into Databricks.
+
 ## Cities Covered
 
 100 cities across 7 regions:
