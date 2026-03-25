@@ -56,10 +56,16 @@ python weather_pipeline.py
 
 ## Dashboard
 
-The pipeline feeds a live Databricks dashboard with global weather KPIs and an interactive world map.
+The pipeline feeds a live Databricks dashboard with 6 visualizations on a single page.
+
+- 🔥 ❄️ 🌧️ 💨 KPI tiles — Hottest, Coldest, Rainiest, and Windiest city at a glance
+- 🗺️ World map colored by average temperature over the past 24 hours
+- 📊 Horizontal bar chart — city temperature rankings categorized as Cold / Cool / Warm / Hot
+- 🍩 Donut chart — percentage of cities by weather condition (Clear sky, Overcast, Rain, Drizzle, etc.)
+- 🔵 Scatter plot — Wind Speed vs Temperature with Humidity encoded as color intensity
 
 ![Weather Dashboard](assets/dashboard_1.png)
-![Weather Dashboard Map](assets/dashboard_2.png)
+![Weather Dashboard](assets/dashboard_2.png)
 
 > Dashboard exported as `dashboards/Weather_Dashboard.lvdash.json` — import it directly into Databricks.
 
