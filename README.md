@@ -1,75 +1,33 @@
 # Weather Watch
 
-A global weather data pipeline built with PySpark that fetches hourly weather data for 100+ cities worldwide using the Open-Meteo API, designed to run as a scheduled job on Databricks.
+A global weather analytics pipeline built on Databricks, covering 100 cities across 6 continents.
 
 ## Architecture
+- **Bronze → Silver → Gold** medallion architecture on Databricks
+- **100 cities** tracked hourly via Open-Meteo API
+- **16 months** of historical data (Dec 2024 → present)
 
-```mermaid
-flowchart LR
-    A[🌐 Open-Meteo API] -->|Hourly fetch\n100+ cities| B[PySpark Ingestion]
+## What it does
+- Hourly data pipeline fetching live weather for 100 cities
+- Anomaly detection flagging unusual weather events (Z-score)
+- City clustering by climate type (K-Means)
+- 7-day temperature forecasting (Prophet)
+- MLflow experiment tracking for all ML models
+- Live Streamlit app pulling data directly from Databricks
 
-    subgraph Databricks Medallion Pipeline
-        B --> C[🥉 Bronze Layer\nweather_bronze\nRaw append-only records]
-        C --> D[🥈 Silver Layer\nweather_silver\nCleaned · Deduplicated\nFeels-like temp · Weather labels]
-        D --> E1[🥇 Gold — Daily Stats\nweather_gold_daily\nAvg · Min · Max per city/day]
-        D --> E2[🥇 Gold — City Ranking\nweather_gold_city_ranking\nLatest snapshot · Global rankings]
-    end
-
-    E1 --> F[📊 Databricks Dashboard\nKPI tiles · World map]
-    E2 --> F
-
-    G[⏰ Databricks Job\n1-hour schedule] -.->|triggers| B
-```
-
-## Overview
-
-This pipeline collects real-time weather data every hour across major cities in North America, South America, Europe, Africa, the Middle East, Asia, and Oceania.
-
-## Data Collected
-
-| Field | Description |
-|---|---|
-| `temperature_c` | Temperature in Celsius |
-| `humidity_pct` | Relative humidity (%) |
-| `wind_speed_kmh` | Wind speed (km/h) |
-| `precipitation_mm` | Precipitation (mm) |
-| `weather_code` | WMO weather condition code |
-
-## Tech Stack
-
-- **PySpark** — distributed data processing
-- **Open-Meteo API** — free, no-key-required weather API
-- **Databricks** — scheduled job execution (hourly refresh)
+## Tech stack
+Databricks · PySpark · Delta Lake · Prophet · scikit-learn · MLflow · Streamlit · Plotly
 
 ## Setup
+1. Clone the repo
+2. Create a virtual environment: `python3 -m venv venv && source venv/bin/activate`
+3. Install dependencies: `pip install -r requirements.txt`
+4. Copy `.env.example` to `.env` and fill in your Databricks credentials
+5. Run the app: `streamlit run weather_app.py`
 
-### Local
-```bash
-pip install -r requirements.txt
-python weather_pipeline.py
-```
-
-### Databricks
-1. Import this repo via **Databricks Repos** (Repos → Add Repo → paste GitHub URL)
-2. Create a new **Job** pointing to `weather_pipeline.py`
-3. Set the schedule to **every 1 hour**
-
-## Dashboard
-
-The pipeline feeds a live Databricks dashboard with 6 visualizations on a single page.
-
-- 🔥 ❄️ 🌧️ 💨 KPI tiles — Hottest, Coldest, Rainiest, and Windiest city at a glance
-- 🗺️ World map colored by average temperature over the past 24 hours
-- 📊 Horizontal bar chart — city temperature rankings categorized as Cold / Cool / Warm / Hot
-- 🍩 Donut chart — percentage of cities by weather condition (Clear sky, Overcast, Rain, Drizzle, etc.)
-- 🔵 Scatter plot — Wind Speed vs Temperature with Humidity encoded as color intensity
-
-![Weather Dashboard](assets/dashboard_1.png)
-![Weather Dashboard](assets/dashboard_2.png)
-
-> Dashboard exported as `dashboards/Weather_Dashboard.lvdash.json` — import it directly into Databricks.
-
-## Cities Covered
-
-100 cities across 7 regions:
-- North America, South America, Europe, Africa, Middle East, Asia, Oceania
+## Notebooks (run in Databricks in this order)
+1. `weather_backfill.py` — one-time historical data load
+2. `weather_pipeline.py` — scheduled hourly pipeline
+3. `weather_anomaly_detection.py` — Z-score anomaly detection
+4. `weather_city_clustering.py` — K-Means climate clustering
+5. `weather_forecasting.py` — Prophet 7-day forecasting
