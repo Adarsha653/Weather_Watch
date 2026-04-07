@@ -26,8 +26,8 @@ Databricks · PySpark · Delta Lake · Prophet · scikit-learn · MLflow · Stre
 5. Run the app: `streamlit run weather_app.py`
 
 ## Notebooks (run in Databricks in this order)
-1. `weather_backfill.py` — one-time historical data load
-2. `weather_pipeline.py` — scheduled hourly pipeline
+1. `backfill_historical.py` — one-time historical data load
+2. `Weather_pipeline.py` — scheduled hourly pipeline
 3. `weather_anomaly_detection.py` — Z-score anomaly detection
 4. `weather_city_clustering.py` — K-Means climate clustering
 5. `weather_forecasting.py` — Prophet 7-day forecasting
