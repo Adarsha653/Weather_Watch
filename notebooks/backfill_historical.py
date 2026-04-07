@@ -1,3 +1,4 @@
+# Databricks notebook source
 import requests
 import json
 import time
@@ -9,7 +10,6 @@ from pyspark.sql.functions import (
 from pyspark.sql.window import Window
 
 cities = [
-    # North America
     {"city": "New York",       "country": "US",  "lat": 40.7128,  "lon": -74.0060},
     {"city": "Los Angeles",    "country": "US",  "lat": 34.0522,  "lon": -118.2437},
     {"city": "Chicago",        "country": "US",  "lat": 41.8781,  "lon": -87.6298},
@@ -27,7 +27,6 @@ cities = [
     {"city": "Montreal",       "country": "CA",  "lat": 45.5017,  "lon": -73.5673},
     {"city": "Mexico City",    "country": "MX",  "lat": 19.4326,  "lon": -99.1332},
     {"city": "Guadalajara",    "country": "MX",  "lat": 20.6597,  "lon": -103.3496},
-    # South America
     {"city": "São Paulo",      "country": "BR",  "lat": -23.5505, "lon": -46.6333},
     {"city": "Rio de Janeiro", "country": "BR",  "lat": -22.9068, "lon": -43.1729},
     {"city": "Buenos Aires",   "country": "AR",  "lat": -34.6037, "lon": -58.3816},
@@ -35,7 +34,6 @@ cities = [
     {"city": "Bogotá",         "country": "CO",  "lat": 4.7110,   "lon": -74.0721},
     {"city": "Santiago",       "country": "CL",  "lat": -33.4489, "lon": -70.6693},
     {"city": "Caracas",        "country": "VE",  "lat": 10.4806,  "lon": -66.9036},
-    # Europe
     {"city": "London",         "country": "GB",  "lat": 51.5074,  "lon": -0.1278},
     {"city": "Paris",          "country": "FR",  "lat": 48.8566,  "lon": 2.3522},
     {"city": "Berlin",         "country": "DE",  "lat": 52.5200,  "lon": 13.4050},
@@ -58,7 +56,6 @@ cities = [
     {"city": "Dublin",         "country": "IE",  "lat": 53.3498,  "lon": -6.2603},
     {"city": "Moscow",         "country": "RU",  "lat": 55.7558,  "lon": 37.6173},
     {"city": "Kiev",           "country": "UA",  "lat": 50.4501,  "lon": 30.5234},
-    # Africa
     {"city": "Cairo",          "country": "EG",  "lat": 30.0444,  "lon": 31.2357},
     {"city": "Lagos",          "country": "NG",  "lat": 6.5244,   "lon": 3.3792},
     {"city": "Nairobi",        "country": "KE",  "lat": -1.2921,  "lon": 36.8219},
@@ -71,7 +68,6 @@ cities = [
     {"city": "Dakar",          "country": "SN",  "lat": 14.7167,  "lon": -17.4677},
     {"city": "Tunis",          "country": "TN",  "lat": 36.8065,  "lon": 10.1815},
     {"city": "Algiers",        "country": "DZ",  "lat": 36.7372,  "lon": 3.0865},
-    # Middle East
     {"city": "Dubai",          "country": "AE",  "lat": 25.2048,  "lon": 55.2708},
     {"city": "Riyadh",         "country": "SA",  "lat": 24.7136,  "lon": 46.6753},
     {"city": "Tehran",         "country": "IR",  "lat": 35.6892,  "lon": 51.3890},
@@ -80,7 +76,6 @@ cities = [
     {"city": "Doha",           "country": "QA",  "lat": 25.2854,  "lon": 51.5310},
     {"city": "Kuwait City",    "country": "KW",  "lat": 29.3759,  "lon": 47.9774},
     {"city": "Amman",          "country": "JO",  "lat": 31.9454,  "lon": 35.9284},
-    # Asia
     {"city": "Tokyo",          "country": "JP",  "lat": 35.6762,  "lon": 139.6503},
     {"city": "Mumbai",         "country": "IN",  "lat": 19.0760,  "lon": 72.8777},
     {"city": "Delhi",          "country": "IN",  "lat": 28.6139,  "lon": 77.2090},
@@ -106,7 +101,6 @@ cities = [
     {"city": "Hanoi",          "country": "VN",  "lat": 21.0285,  "lon": 105.8542},
     {"city": "Taipei",         "country": "TW",  "lat": 25.0330,  "lon": 121.5654},
     {"city": "Osaka",          "country": "JP",  "lat": 34.6937,  "lon": 135.5023},
-    # Oceania
     {"city": "Sydney",         "country": "AU",  "lat": -33.8688, "lon": 151.2093},
     {"city": "Melbourne",      "country": "AU",  "lat": -37.8136, "lon": 144.9631},
     {"city": "Brisbane",       "country": "AU",  "lat": -27.4698, "lon": 153.0251},
@@ -118,68 +112,69 @@ cities = [
     {"city": "Canberra",       "country": "AU",  "lat": -35.2809, "lon": 149.1300},
 ]
 
-def parse_weather_response(response_json, city_name, country):
-    hourly = response_json["hourly"]
-    records = []
-    for i in range(len(hourly["time"])):
-        records.append({
-            "city":             city_name,
-            "country":          country,
-            "latitude":         response_json["latitude"],
-            "longitude":        response_json["longitude"],
-            "timezone":         response_json["timezone"],
+START_DATE = "2025-03-01"
+END_DATE   = "2026-03-24"
+
+def fetch_historical(city_info):
+    response = requests.get("https://archive-api.open-meteo.com/v1/archive", params={
+        "latitude":   city_info["lat"],
+        "longitude":  city_info["lon"],
+        "start_date": START_DATE,
+        "end_date":   END_DATE,
+        "hourly":     "temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation,weather_code",
+        "timezone":   "auto"
+    }, timeout=30)
+    response.raise_for_status()
+    data = response.json()
+    hourly = data["hourly"]
+    return [
+        {
+            "city":             city_info["city"],
+            "country":          city_info["country"],
+            "latitude":         data["latitude"],
+            "longitude":        data["longitude"],
+            "timezone":         data["timezone"],
             "time":             hourly["time"][i],
             "temperature_c":    hourly["temperature_2m"][i],
             "humidity_pct":     hourly["relative_humidity_2m"][i],
             "wind_speed_kmh":   hourly["wind_speed_10m"][i],
             "precipitation_mm": hourly["precipitation"][i],
             "weather_code":     hourly["weather_code"][i]
-        })
-    return records
-
-def fetch_city_weather(city_info):
-    url = "https://api.open-meteo.com/v1/forecast"
-    params = {
-        "latitude":  city_info["lat"],
-        "longitude": city_info["lon"],
-        "hourly":    "temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation,weather_code",
-        "timezone":  "auto",
-        "forecast_days": 1
-    }
-    response = requests.get(url, params=params, timeout=30)
-    response.raise_for_status()
-    return parse_weather_response(response.json(), city_info["city"], city_info["country"])
+        }
+        for i in range(len(hourly["time"]))
+    ]
 
 all_records = []
-failed_cities = []
+failed = []
 
 for city in cities:
     try:
-        records = fetch_city_weather(city)
+        records = fetch_historical(city)
         all_records.extend(records)
+        print(f"✓ {city['city']}: {len(records)} records")
     except Exception as e:
         print(f"✗ {city['city']}: FAILED — {e}")
-        failed_cities.append(city["city"])
-    time.sleep(0.2)
+        failed.append(city)
+    time.sleep(0.3)
 
-# Retry failed cities once
-for city in cities:
-    if city["city"] in failed_cities:
-        try:
-            records = fetch_city_weather(city)
-            all_records.extend(records)
-            failed_cities.remove(city["city"])
-        except Exception:
-            pass
+for city in failed[:]:
+    try:
+        records = fetch_historical(city)
+        all_records.extend(records)
+        failed.remove(city)
+        print(f"↻ {city['city']}: recovered")
+    except Exception as e:
+        print(f"✗ {city['city']}: still failing — {e}")
 
-print(f"Fetched: {len(all_records)} records | Failed: {failed_cities if failed_cities else 'None'}")
+print(f"\nTotal records: {len(all_records)} | Failed: {[c['city'] for c in failed] or 'None'}")
 
-# Write to Bronze
-df_bronze = spark.createDataFrame(all_records)
-df_bronze = df_bronze.withColumn("ingested_at", current_timestamp())
+df_backfill = spark.createDataFrame(all_records).withColumn("ingested_at", current_timestamp())
+df_backfill = df_backfill.dropDuplicates(["city", "time"])
+df_backfill.write.format("delta").mode("append").saveAsTable("weather_bronze")
+print("Backfill written to weather_bronze.")
 
-df_bronze.write.format("delta").mode("append").saveAsTable("weather_bronze")
-print("Bronze written.")
+
+# COMMAND ----------
 
 def weather_description(code_col):
     return (
@@ -219,6 +214,8 @@ df_silver = (
 
 df_silver.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("weather_silver")
 print("Silver written.")
+
+# COMMAND ----------
 
 df_silver = spark.table("weather_silver")
 
@@ -260,3 +257,24 @@ df_ranking.write.format("delta").mode("overwrite").option("overwriteSchema", "tr
 print("Gold tables written.")
 print(f"Daily: {spark.table('weather_gold_daily').count()} rows")
 print(f"Ranking: {spark.table('weather_gold_city_ranking').count()} rows")
+
+# COMMAND ----------
+
+# ── DATA QUALITY CHECKS ─────────────────────────────────────────────────
+from pyspark.sql.functions import count, when, isnan, isnull
+
+df_check = spark.table("weather_silver")
+total    = df_check.count()
+nulls    = df_check.filter(isnull("temperature_c")).count()
+latest   = df_check.selectExpr("MAX(time)").collect()[0][0]
+
+print(f"Total Silver rows : {total:,}")
+print(f"Null temperatures : {nulls}")
+print(f"Latest timestamp  : {latest}")
+
+# Hard stop if something is clearly wrong
+assert total > 1_000_000,  f"Row count too low: {total:,}"
+assert nulls == 0,          f"Null temperatures found: {nulls}"
+assert latest is not None,  "No data in Silver — pipeline may have failed silently"
+
+print("All quality checks passed.")
