@@ -1,2 +1,10 @@
+streamlit
+pandas
+numpy
 requests
-pyspark
+scikit-learn
+prophet
+matplotlib
+seaborn
+sqlalchemy
+python-dotenv
