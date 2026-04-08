@@ -1,10 +1,6 @@
 streamlit
 pandas
-numpy
 plotly
-scikit-learn
-prophet
-sqlalchemy
 python-dotenv
 requests
-databricks-sql-connector
+databricks-sql-connector>=3.0.0

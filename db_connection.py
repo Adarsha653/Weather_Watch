@@ -1,12 +1,22 @@
 from databricks import sql
 import pandas as pd
-import streamlit as st
 
-SERVER_HOSTNAME = st.secrets["SERVER_HOSTNAME"]
-HTTP_PATH       = st.secrets["HTTP_PATH"]
-ACCESS_TOKEN    = st.secrets["ACCESS_TOKEN"]
-CATALOG         = st.secrets["CATALOG"]
-SCHEMA          = st.secrets["SCHEMA"]
+try:
+    import streamlit as st
+    SERVER_HOSTNAME = st.secrets["SERVER_HOSTNAME"]
+    HTTP_PATH       = st.secrets["HTTP_PATH"]
+    ACCESS_TOKEN    = st.secrets["ACCESS_TOKEN"]
+    CATALOG         = st.secrets["CATALOG"]
+    SCHEMA          = st.secrets["SCHEMA"]
+except Exception:
+    from dotenv import load_dotenv
+    import os
+    load_dotenv()
+    SERVER_HOSTNAME = os.getenv("SERVER_HOSTNAME")
+    HTTP_PATH       = os.getenv("HTTP_PATH")
+    ACCESS_TOKEN    = os.getenv("ACCESS_TOKEN")
+    CATALOG         = os.getenv("CATALOG", "workspace")
+    SCHEMA          = os.getenv("SCHEMA", "default")
 
 def run_query(sql_query):
     with sql.connect(
