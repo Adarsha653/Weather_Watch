@@ -1,10 +1,9 @@
 streamlit
 pandas
 numpy
-requests
+plotly
 scikit-learn
 prophet
-matplotlib
-seaborn
 sqlalchemy
 python-dotenv
+requests
