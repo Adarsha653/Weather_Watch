@@ -72,6 +72,103 @@
         "SELECT city, temperature_c, wind_speed_kmh, humidity_pct\n",
         "FROM weather_gold_city_ranking\n"
       ]
+    },
+    {
+      "name": "1b9b5f3e",
+      "displayName": "Global Monthly Climate Averages Summary",
+      "queryLines": [
+        "SELECT\n",
+        "    DATE_TRUNC('month', date)          AS month,\n",
+        "    ROUND(AVG(avg_temp_c), 1)          AS global_avg_temp_c,\n",
+        "    ROUND(AVG(avg_humidity_pct), 1)    AS global_avg_humidity_pct,\n",
+        "    ROUND(AVG(total_precipitation_mm), 1) AS global_avg_precip_mm\n",
+        "FROM weather_gold_daily\n",
+        "GROUP BY 1\n",
+        "ORDER BY 1"
+      ]
+    },
+    {
+      "name": "54836373",
+      "displayName": "city_details_table",
+      "queryLines": [
+        "SELECT\n",
+        "  temp_rank,\n",
+        "  city,\n",
+        "  country,\n",
+        "  temperature_c,\n",
+        "  feels_like_c,\n",
+        "  ROUND(feels_like_c - temperature_c, 1) AS feels_diff_c,\n",
+        "  humidity_pct,\n",
+        "  wind_speed_kmh,\n",
+        "  precipitation_mm,\n",
+        "  weather_description,\n",
+        "  DATE_FORMAT(time, 'HH:mm:ss') AS local_time\n",
+        "FROM\n",
+        "  weather_gold_city_ranking\n",
+        "ORDER BY\n",
+        "  temp_rank"
+      ]
+    },
+    {
+      "name": "b483b928",
+      "displayName": "Temperature Anamolies",
+      "queryLines": [
+        "SELECT\n",
+        "    city, country, date,\n",
+        "    today_temp_c, normal_temp_c,\n",
+        "    ROUND(today_temp_c - normal_temp_c, 1) AS temp_deviation_c,\n",
+        "    zscore_temp, anomaly_type, severity, detected_at, today_wind_kmh, today_precip_mm\n",
+        "FROM weather_gold_anomalies\n",
+        "ORDER BY ABS(zscore_temp) DESC\n"
+      ]
+    },
+    {
+      "name": "0946cce0",
+      "displayName": "city_climate_clusters",
+      "queryLines": [
+        "SELECT\n",
+        "    city,\n",
+        "    country,\n",
+        "    climate_cluster,\n",
+        "    mean_temp_c,\n",
+        "    mean_humidity,\n",
+        "    mean_wind_kmh,\n",
+        "    mean_precip_mm\n",
+        "FROM weather_gold_city_clusters\n",
+        "ORDER BY climate_cluster, mean_temp_c DESC"
+      ]
+    },
+    {
+      "name": "cf52d490",
+      "displayName": "cluster_summary",
+      "queryLines": [
+        "SELECT\n",
+        "    climate_cluster,\n",
+        "    COUNT(*)                          AS city_count,\n",
+        "    ROUND(AVG(mean_temp_c), 1)        AS avg_temp_c,\n",
+        "    ROUND(AVG(mean_humidity), 1)      AS avg_humidity_pct,\n",
+        "    ROUND(AVG(mean_wind_kmh), 1)      AS avg_wind_kmh,\n",
+        "    ROUND(AVG(mean_precip_mm), 1)     AS avg_precip_mm\n",
+        "FROM weather_gold_city_clusters\n",
+        "GROUP BY climate_cluster\n",
+        "ORDER BY avg_temp_c DESC"
+      ]
+    },
+    {
+      "name": "71e290d7",
+      "displayName": "Forecasts",
+      "queryLines": [
+        "SELECT\n",
+        "    city,\n",
+        "    country,\n",
+        "    DATE(forecast_date)                               AS forecast_date,\n",
+        "    predicted_temp_c,\n",
+        "    predicted_low_c,\n",
+        "    predicted_high_c,\n",
+        "    ROUND(predicted_high_c - predicted_low_c, 1)      AS uncertainty_c\n",
+        "FROM weather_gold_forecast\n",
+        "ORDER BY city, forecast_date"
+      ]
     }
   ],
   "pages": [
@@ -513,7 +610,7 @@
               "version": 3,
               "frame": {
                 "showTitle": true,
-                "title": "Average Temperature vs Cities",
+                "title": "Average Temperature vs Cities in the last 24 hours",
                 "showDescription": false,
                 "description": ""
               },
@@ -610,7 +707,7 @@
               "version": 3,
               "frame": {
                 "showTitle": true,
-                "title": "Proportion of cities across different weather conditions"
+                "title": "Proportion of cities across different weather conditions in the last 24 hours"
               },
               "widgetType": "pie",
               "encodings": {
@@ -671,7 +768,7 @@
               "version": 3,
               "frame": {
                 "showTitle": true,
-                "title": "Wind Speed vs Temperature"
+                "title": "Wind Speed vs Temperature in the last 24 hours"
               },
               "mark": {
                 "colors": [
@@ -750,13 +847,818 @@
           },
           "position": {
             "x": 0,
-            "y": 18,
+            "y": 25,
             "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "global-average-temperature-trend",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "1b9b5f3e",
+                  "fields": [
+                    {
+                      "name": "monthly(month)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `month`)"
+                    },
+                    {
+                      "name": "sum(global_avg_temp_c)",
+                      "expression": "SUM(`global_avg_temp_c`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Global Average Temperature trend"
+              },
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(month)",
+                  "displayName": "Months",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(global_avg_temp_c)",
+                  "displayName": "Average Temperature",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 51,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "detailed-weather-conditions-different-cities-past-24-hours",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "54836373",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "temp_rank",
+                      "expression": "`temp_rank`"
+                    },
+                    {
+                      "name": "temperature_c",
+                      "expression": "`temperature_c`"
+                    },
+                    {
+                      "name": "wind_speed_kmh",
+                      "expression": "`wind_speed_kmh`"
+                    },
+                    {
+                      "name": "precipitation_mm",
+                      "expression": "`precipitation_mm`"
+                    },
+                    {
+                      "name": "humidity_pct",
+                      "expression": "`humidity_pct`"
+                    },
+                    {
+                      "name": "weather_description",
+                      "expression": "`weather_description`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Detailed weather conditions of different cities over the past 24 hours"
+              },
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "city"
+                  },
+                  {
+                    "fieldName": "temp_rank"
+                  },
+                  {
+                    "fieldName": "temperature_c"
+                  },
+                  {
+                    "fieldName": "wind_speed_kmh"
+                  },
+                  {
+                    "fieldName": "precipitation_mm"
+                  },
+                  {
+                    "fieldName": "humidity_pct"
+                  },
+                  {
+                    "fieldName": "weather_description"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 19,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "filter-by-country",
+            "queries": [
+              {
+                "name": "dashboards/01f127dece8615b8847ce66778ee966f/datasets/01f12d76a65e16beb4565490e0e259a7_country",
+                "query": {
+                  "datasetName": "54836373",
+                  "fields": [
+                    {
+                      "name": "country",
+                      "expression": "`country`"
+                    },
+                    {
+                      "name": "country_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Filter by country"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "country",
+                    "queryName": "dashboards/01f127dece8615b8847ce66778ee966f/datasets/01f12d76a65e16beb4565490e0e259a7_country"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 18,
+            "width": 4,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "filter-by-city",
+            "queries": [
+              {
+                "name": "dashboards/01f127dece8615b8847ce66778ee966f/datasets/01f12d76a65e16beb4565490e0e259a7_city",
+                "query": {
+                  "datasetName": "54836373",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "city_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Filter by city"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "city",
+                    "queryName": "dashboards/01f127dece8615b8847ce66778ee966f/datasets/01f12d76a65e16beb4565490e0e259a7_city"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 18,
+            "width": 4,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "filter-by-condition",
+            "queries": [
+              {
+                "name": "dashboards/01f127dece8615b8847ce66778ee966f/datasets/01f12d76a65e16beb4565490e0e259a7_weather_description",
+                "query": {
+                  "datasetName": "54836373",
+                  "fields": [
+                    {
+                      "name": "weather_description",
+                      "expression": "`weather_description`"
+                    },
+                    {
+                      "name": "weather_description_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Filter by condition"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "weather_description",
+                    "queryName": "dashboards/01f127dece8615b8847ce66778ee966f/datasets/01f12d76a65e16beb4565490e0e259a7_weather_description"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 18,
+            "width": 4,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "cities-unusual-weather",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "b483b928",
+                  "fields": [
+                    {
+                      "name": "country",
+                      "expression": "`country`"
+                    },
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "anomaly_type",
+                      "expression": "`anomaly_type`"
+                    },
+                    {
+                      "name": "normal_temp_c",
+                      "expression": "`normal_temp_c`"
+                    },
+                    {
+                      "name": "today_temp_c",
+                      "expression": "`today_temp_c`"
+                    },
+                    {
+                      "name": "severity",
+                      "expression": "`severity`"
+                    },
+                    {
+                      "name": "today_precip_mm",
+                      "expression": "`today_precip_mm`"
+                    },
+                    {
+                      "name": "today_wind_kmh",
+                      "expression": "`today_wind_kmh`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Cities with unsual weather"
+              },
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "country"
+                  },
+                  {
+                    "fieldName": "city"
+                  },
+                  {
+                    "fieldName": "anomaly_type"
+                  },
+                  {
+                    "fieldName": "normal_temp_c"
+                  },
+                  {
+                    "fieldName": "today_temp_c"
+                  },
+                  {
+                    "fieldName": "severity"
+                  },
+                  {
+                    "fieldName": "today_precip_mm"
+                  },
+                  {
+                    "fieldName": "today_wind_kmh"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 31,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "average-temperature-climate-cluster",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "cf52d490",
+                  "fields": [
+                    {
+                      "name": "climate_cluster",
+                      "expression": "`climate_cluster`"
+                    },
+                    {
+                      "name": "avg(avg_temp_c)",
+                      "expression": "AVG(`avg_temp_c`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Average Temperature by Climate Cluster"
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "climate_cluster",
+                  "displayName": "Climate Cluster",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "y-reversed"
+                    }
+                  }
+                },
+                "y": {
+                  "fieldName": "avg(avg_temp_c)",
+                  "displayName": "Temperature (°C)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "climate_cluster",
+                  "displayName": "Climate Cluster",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 37,
+            "width": 6,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "city-climate-clusters-table",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "0946cce0",
+                  "fields": [
+                    {
+                      "name": "country",
+                      "expression": "`country`"
+                    },
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "climate_cluster",
+                      "expression": "`climate_cluster`"
+                    },
+                    {
+                      "name": "mean_temp_c",
+                      "expression": "`mean_temp_c`"
+                    },
+                    {
+                      "name": "mean_wind_kmh",
+                      "expression": "`mean_wind_kmh`"
+                    },
+                    {
+                      "name": "mean_humidity",
+                      "expression": "`mean_humidity`"
+                    },
+                    {
+                      "name": "mean_precip_mm",
+                      "expression": "`mean_precip_mm`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "City Climate Clusters Table"
+              },
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "country"
+                  },
+                  {
+                    "fieldName": "city"
+                  },
+                  {
+                    "fieldName": "climate_cluster"
+                  },
+                  {
+                    "fieldName": "mean_temp_c"
+                  },
+                  {
+                    "fieldName": "mean_wind_kmh"
+                  },
+                  {
+                    "fieldName": "mean_humidity"
+                  },
+                  {
+                    "fieldName": "mean_precip_mm"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 38,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "filter-city-1",
+            "queries": [
+              {
+                "name": "dashboards/01f127dece8615b8847ce66778ee966f/datasets/01f12e2e00d813eea305ec55077acad4_city",
+                "query": {
+                  "datasetName": "0946cce0",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "city_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Filter by city"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "city",
+                    "queryName": "dashboards/01f127dece8615b8847ce66778ee966f/datasets/01f12e2e00d813eea305ec55077acad4_city"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 37,
+            "width": 3,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "8dd66c9d",
+            "queries": [
+              {
+                "name": "dashboards/01f127dece8615b8847ce66778ee966f/datasets/01f12e2e00d813eea305ec55077acad4_climate_cluster",
+                "query": {
+                  "datasetName": "0946cce0",
+                  "fields": [
+                    {
+                      "name": "climate_cluster",
+                      "expression": "`climate_cluster`"
+                    },
+                    {
+                      "name": "climate_cluster_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Filter by cluster"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "climate_cluster",
+                    "queryName": "dashboards/01f127dece8615b8847ce66778ee966f/datasets/01f12e2e00d813eea305ec55077acad4_climate_cluster"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 37,
+            "width": 3,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "7-day-forecast-line-chart",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "71e290d7",
+                  "fields": [
+                    {
+                      "name": "daily(forecast_date)",
+                      "expression": "DATE_TRUNC(\"DAY\", `forecast_date`)"
+                    },
+                    {
+                      "name": "predicted_temp_c",
+                      "expression": "`predicted_temp_c`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "7-day forecast line chart"
+              },
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "daily(forecast_date)",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "predicted_temp_c",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 45,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "filter-city-2",
+            "queries": [
+              {
+                "name": "dashboards/01f127dece8615b8847ce66778ee966f/datasets/01f12e4139031a8e952a565ec256af90_city",
+                "query": {
+                  "datasetName": "71e290d7",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "city_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Filter by city"
+              },
+              "selection": {
+                "defaultSelection": {
+                  "values": {
+                    "dataType": "STRING",
+                    "values": [
+                      {
+                        "value": "London"
+                      }
+                    ]
+                  }
+                }
+              },
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "city",
+                    "queryName": "dashboards/01f127dece8615b8847ce66778ee966f/datasets/01f12e4139031a8e952a565ec256af90_city"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 44,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "37c70f6d",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "71e290d7",
+                  "fields": [
+                    {
+                      "name": "forecast_date",
+                      "expression": "`forecast_date`"
+                    },
+                    {
+                      "name": "country",
+                      "expression": "`country`"
+                    },
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "predicted_temp_c",
+                      "expression": "`predicted_temp_c`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "forecast_date"
+                  },
+                  {
+                    "fieldName": "country"
+                  },
+                  {
+                    "fieldName": "city"
+                  },
+                  {
+                    "fieldName": "predicted_temp_c"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 45,
+            "width": 6,
             "height": 6
           }
         }
       ],
       "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "33961961",
+      "displayName": "Global Filters",
+      "layout": [
+        {
+          "widget": {
+            "name": "filter-by-city",
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Filter by city"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": []
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS",
       "layoutVersion": "GRID_V1"
     }
   ],
