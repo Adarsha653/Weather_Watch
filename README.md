@@ -149,9 +149,11 @@ Weather_Watch/
 ├── requirements.txt
 ├── .env.example
 ├── .gitignore
-├── db_connection.py          # Databricks SQL connector
-├── weather_app.py            # Streamlit app
-├── screenshots/              # Dashboard and app screenshots
+├── db_connection.py              # Databricks SQL connector
+├── weather_app.py                # Streamlit app
+├── dashboards/
+│   └── Weather_Dashboard.json    # Databricks dashboard definition
+├── screenshots/                  # Dashboard and app screenshots
 └── notebooks/
     ├── Weather_pipeline.py
     ├── backfill_historical.py
@@ -159,7 +161,5 @@ Weather_Watch/
     ├── weather_city_clustering.py
     └── weather_forecasting.py
 ```
-
----
 
 *Built by Adarsha Aryal · [weatherwatch.streamlit.app](https://weatherwatch.streamlit.app)*
