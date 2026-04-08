@@ -27,3 +27,6 @@ Thumbs.db
 .idea/
 weather_watch.env
 .env
+
+# Streamlit toml secrets
+.streamlit/secrets.toml

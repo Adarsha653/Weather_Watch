@@ -1,16 +1,12 @@
 from databricks import sql
 import pandas as pd
-import os
-from dotenv import load_dotenv
+import streamlit as st
 
-# ── LOAD ENVIRONMENT VARIABLES ──────────────────────────────────────────────────
-load_dotenv()
-
-SERVER_HOSTNAME = os.getenv("SERVER_HOSTNAME")
-HTTP_PATH       = os.getenv("HTTP_PATH")
-ACCESS_TOKEN    = os.getenv("ACCESS_TOKEN")
-CATALOG         = os.getenv("CATALOG")
-SCHEMA          = os.getenv("SCHEMA")
+SERVER_HOSTNAME = st.secrets["SERVER_HOSTNAME"]
+HTTP_PATH       = st.secrets["HTTP_PATH"]
+ACCESS_TOKEN    = st.secrets["ACCESS_TOKEN"]
+CATALOG         = st.secrets["CATALOG"]
+SCHEMA          = st.secrets["SCHEMA"]
 
 def run_query(sql_query):
     with sql.connect(
